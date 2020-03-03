@@ -156,6 +156,20 @@ global:
     # This setting must be true in both primary and secondary datacenters.
     enabled: false
 
+  # Configure ACLs.
+  acls:
+    # If true, an ACL token will be created that can be used in secondary
+    # datacenters for replication. This should only be set to true in the
+    # primary datacenter since the replication token must be created from that
+    # datacenter. It will then be imported into secondary datacenters.
+    createReplicationToken: false
+
+    # replicationToken references a secret containing the replication ACL token.
+    # This token will be used by secondary datacenters to perform ACL replication.
+    replicationToken:
+      secretName: null
+      secretKey: null
+
 # Server, when enabled, configures a server cluster to run. This should
 # be disabled if you plan on connecting to a Consul cluster external to
 # the Kube cluster.

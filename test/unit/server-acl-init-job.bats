@@ -658,3 +658,111 @@ load _helpers
     yq 'any(contains("inject-k8s-namespace-mirroring-prefix"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
+
+#--------------------------------------------------------------------
+# global.acls.createReplicationToken
+
+@test "serverACLInit/Job: -create-acl-replication-token is not set by default" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-create-acl-replication-token"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+}
+
+@test "serverACLInit/Job: -create-acl-replication-token is true when acls.createReplicationToken is true" {
+  cd `chart_dir`
+  local actual=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.createReplicationToken=true' \
+      . | tee /dev/stderr |
+      yq '.spec.template.spec.containers[0].command | any(contains("-create-acl-replication-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+#--------------------------------------------------------------------
+# global.acls.replicationToken
+
+@test "serverACLInit/Job: -enable-acl-replication is not set by default" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      . | tee /dev/stderr)
+
+  # Test the flag is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  # Test the ACL_REPLICATION_TOKEN environment variable is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN")) | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: -enable-acl-replication is not set when acls.replicationToken.secretName is set but secretKey is not" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.replicationToken.secretName=name' \
+      . | tee /dev/stderr)
+
+  # Test the flag is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  # Test the ACL_REPLICATION_TOKEN environment variable is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN")) | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: -enable-acl-replication is not set when acls.replicationToken.secretKey is set but secretName is not" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.replicationToken.secretKey=key' \
+      . | tee /dev/stderr)
+
+  # Test the flag is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
+  [ "${actual}" = "false" ]
+
+  # Test the ACL_REPLICATION_TOKEN environment variable is not set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN")) | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+}
+
+@test "serverACLInit/Job: -enable-acl-replication is set when acls.replicationToken.secretKey and secretName are set" {
+  cd `chart_dir`
+  local object=$(helm template \
+      -x templates/server-acl-init-job.yaml  \
+      --set 'global.bootstrapACLs=true' \
+      --set 'global.acls.replicationToken.secretName=name' \
+      --set 'global.acls.replicationToken.secretKey=key' \
+      . | tee /dev/stderr)
+
+  # Test the -enable-acl-replication flag is set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the -datacenter flag is set.
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].command | any(contains("-datacenter=dc1"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the ACL_REPLICATION_TOKEN environment variable is set.
+  local actual=$(echo "$object" |
+    yq -r -c '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN"))' | tee /dev/stderr)
+  [ "${actual}" = '[{"name":"ACL_REPLICATION_TOKEN","valueFrom":{"secretKeyRef":{"name":"name","key":"key"}}}]' ]
+}
