@@ -108,7 +108,6 @@ spec:
                 {{- end }}
                 {{- if (and .Values.global.acls.replicationToken.secretName .Values.global.acls.replicationToken.secretKey) }}
                 -enable-acl-replication=true \
-                -datacenter={{ .Values.global.datacenter }} \
                 {{- end }}
                 {{- if .Values.global.enableConsulNamespaces }}
                 -enable-namespaces=true \

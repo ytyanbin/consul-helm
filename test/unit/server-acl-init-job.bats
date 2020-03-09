@@ -756,11 +756,6 @@ load _helpers
     yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
-  # Test the -datacenter flag is set.
-  local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].command | any(contains("-datacenter=dc1"))' | tee /dev/stderr)
-  [ "${actual}" = "true" ]
-
   # Test the ACL_REPLICATION_TOKEN environment variable is set.
   local actual=$(echo "$object" |
     yq -r -c '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN"))' | tee /dev/stderr)
