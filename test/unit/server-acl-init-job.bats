@@ -698,9 +698,14 @@ load _helpers
     yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
-  # Test the ACL_REPLICATION_TOKEN environment variable is not set.
+  # Test the volume doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN")) | length == 0' | tee /dev/stderr)
+    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -717,9 +722,14 @@ load _helpers
     yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
-  # Test the ACL_REPLICATION_TOKEN environment variable is not set.
+  # Test the volume doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN")) | length == 0' | tee /dev/stderr)
+    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -736,9 +746,14 @@ load _helpers
     yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
   [ "${actual}" = "false" ]
 
-  # Test the ACL_REPLICATION_TOKEN environment variable is not set.
+  # Test the volume doesn't exist
   local actual=$(echo "$object" |
-    yq '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN")) | length == 0' | tee /dev/stderr)
+    yq '.spec.template.spec.volumes | length == 0' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount doesn't exist
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | length == 0' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 }
 
@@ -756,8 +771,18 @@ load _helpers
     yq '.spec.template.spec.containers[0].command | any(contains("-enable-acl-replication"))' | tee /dev/stderr)
   [ "${actual}" = "true" ]
 
-  # Test the ACL_REPLICATION_TOKEN environment variable is set.
+  # Test the -acl-replication-token-flag flag is set.
   local actual=$(echo "$object" |
-    yq -r -c '.spec.template.spec.containers[0].env | map(select(.name == "ACL_REPLICATION_TOKEN"))' | tee /dev/stderr)
-  [ "${actual}" = '[{"name":"ACL_REPLICATION_TOKEN","valueFrom":{"secretKeyRef":{"name":"name","key":"key"}}}]' ]
+    yq '.spec.template.spec.containers[0].command | any(contains("-acl-replication-token-file=/consul/tokens/acl-replication-token"))' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume exists
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.volumes | map(select(.name == "acl-replication-token")) | length == 1' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
+
+  # Test the volume mount exists
+  local actual=$(echo "$object" |
+    yq '.spec.template.spec.containers[0].volumeMounts | map(select(.name == "acl-replication-token")) | length == 1' | tee /dev/stderr)
+  [ "${actual}" = "true" ]
 }
