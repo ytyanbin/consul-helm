@@ -771,26 +771,23 @@ meshGateway:
     # Port that gets registered.
     port: 443
 
-    # If true, each Gateway Pod will advertise its NodeIP
-    # (as provided by the Kubernetes downward API) as the wan address.
-    # This is useful if the node IPs are routable from other DCs.
-    # useNodeName and host must be false and "" respectively.
-    useNodeIP: true
+    # source configures where to retrieve the wan address for the mesh gateway
+    # from. Can be either: NodeIP, NodeName, LoadBalancerAddress, Address.
+    #
+    # NodeIP - The node ip as provided by the Kubernetes downward API.
+    # NodeName - The name of the node as provided by the Kubernetes downward
+    #   API. This is useful if the node names are DNS entries that
+    #   are routable from other datacenters..
+    # LoadBalancerAddress - External IP or Hostname of the LoadBalancer service
+    #   fronting the mesh gateways. meshGateway.service.enabled must be
+    #   true and meshGateway.service.type must be "LoadBalancer".
+    # Static - Use the address hardcoded in meshGateway.wanAddress.static.
+    source: "NodeIP"
 
-    # If true, each Gateway Pod will advertise its NodeName
-    # (as provided by the Kubernetes downward API) as the wan address.
-    # This is useful if the node names are DNS entries that are
-    # routable from other DCs.
-    # meshGateway.wanAddress.port will be used as the port for the wan address.
-    # useNodeIP and host must be false and "" respectively.
-    useNodeName: false
-
-    # If set, each gateway Pod will use this host as its wan address.
-    # Users must ensure that this address routes to the Gateway pods,
-    # for example via a DNS entry that routes to the Service fronting the Deployment.
-    # meshGateway.wanAddress.port will be used as the port for the wan address.
-    # useNodeIP and useNodeName must be false.
-    host: ""
+    # If source is set to "Static" then this value will be used as the wan
+    # address of the mesh gateways. This is useful if you've configured a
+    # DNS entry to point to your mesh gateways.
+    static: ""
 
   # The service option configures the Service that fronts the Gateway Deployment.
   service:
