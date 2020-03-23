@@ -49,23 +49,26 @@ load _helpers
   [ "${actual}" = "secrets" ]
 }
 
-@test "meshGateway/ClusterRole: rules for meshGateway.wanAddress.source=LoadBalancerAddress" {
+@test "meshGateway/ClusterRole: rules for meshGateway.wanAddress.source=Service" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
       --set 'connectInject.enabled=true' \
-      --set 'meshGateway.wanAddress.source=LoadBalancerAddress' \
+      --set 'meshGateway.service.enabled=true' \
+      --set 'meshGateway.service.type=LoadBalancer' \
+      --set 'meshGateway.wanAddress.source=Service' \
       . | tee /dev/stderr |
       yq -r '.rules[0].resources[0]' | tee /dev/stderr)
   [ "${actual}" = "services" ]
 }
 
-@test "meshGateway/ClusterRole: rules is empty if no ACLs, PSPs or mesh gateways" {
+@test "meshGateway/ClusterRole: rules is empty if no ACLs, PSPs and meshGateway.source != Service" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-clusterrole.yaml  \
       --set 'meshGateway.enabled=true' \
+      --set 'meshGateway.wanAddress.source=NodeIP' \
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
       . | tee /dev/stderr |
@@ -82,7 +85,9 @@ load _helpers
       --set 'client.grpc=true' \
       --set 'global.bootstrapACLs=true' \
       --set 'global.enablePodSecurityPolicies=true' \
-      --set 'meshGateway.wanAddress.source=LoadBalancerAddress' \
+      --set 'meshGateway.service.enabled=true' \
+      --set 'meshGateway.service.type=LoadBalancer' \
+      --set 'meshGateway.wanAddress.source=Service' \
       . | tee /dev/stderr |
       yq -r '.rules | length' | tee /dev/stderr)
   [ "${actual}" = "3" ]

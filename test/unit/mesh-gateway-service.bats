@@ -11,7 +11,7 @@ load _helpers
   [ "${actual}" = "false" ]
 }
 
-@test "meshGateway/Service: disabled by default with meshGateway, connectInject and client.grpc enabled" {
+@test "meshGateway/Service: enabled by default with meshGateway, connectInject and client.grpc enabled" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-service.yaml  \
@@ -20,7 +20,7 @@ load _helpers
       --set 'client.grpc=true' \
       . | tee /dev/stderr |
       yq 'length > 0' | tee /dev/stderr)
-  [ "${actual}" = "false" ]
+  [ "${actual}" = "true" ]
 }
 
 @test "meshGateway/Service: enabled with meshGateway.enabled=true meshGateway.service.enabled" {
@@ -159,7 +159,7 @@ load _helpers
 #--------------------------------------------------------------------
 # Service type
 
-@test "meshGateway/Service: defaults to type ClusterIP" {
+@test "meshGateway/Service: defaults to type LoadBalancer" {
   cd `chart_dir`
   local actual=$(helm template \
       -x templates/mesh-gateway-service.yaml  \
@@ -169,7 +169,7 @@ load _helpers
       --set 'meshGateway.service.enabled=true' \
       . | tee /dev/stderr |
       yq -r '.spec.type' | tee /dev/stderr)
-  [ "${actual}" = "ClusterIP" ]
+  [ "${actual}" = "LoadBalancer" ]
 }
 
 @test "meshGateway/Service: can set type" {
@@ -180,10 +180,10 @@ load _helpers
       --set 'connectInject.enabled=true' \
       --set 'client.grpc=true' \
       --set 'meshGateway.service.enabled=true' \
-      --set 'meshGateway.service.type=LoadBalancer' \
+      --set 'meshGateway.service.type=ClusterIP' \
       . | tee /dev/stderr |
       yq -r '.spec.type' | tee /dev/stderr)
-  [ "${actual}" = "LoadBalancer" ]
+  [ "${actual}" = "ClusterIP" ]
 }
 
 #--------------------------------------------------------------------
