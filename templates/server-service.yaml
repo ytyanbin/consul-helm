@@ -69,4 +69,9 @@ spec:
     app: {{ template "consul.name" . }}
     release: "{{ .Release.Name }}"
     component: server
+    type: LoadBalancer
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 40.73.127.161
 {{- end }}
